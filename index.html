@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e7edf7">
+  <meta name="description" content="2019 – 2021 的留言本">
+  <title>留言</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23edeff2'/%3E%3Cpath d='M8 12h16v10H8z' fill='none' stroke='%233f5f80' stroke-width='1.6'/%3E%3Cpath d='M8 12.5l8 5.5 8-5.5' fill='none' stroke='%233f5f80' stroke-width='1.6'/%3E%3C/svg%3E">
+  <script>
+    try {
+      var savedTheme = localStorage.getItem('message-theme');
+      if (/^(glass|glass-dark)$/.test(savedTheme)) {
+        document.documentElement.dataset.theme = savedTheme;
+      } else {
+        document.documentElement.dataset.theme = 'glass';
+      }
+    } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/ly.css">
+</head>
+<body>
+  <a class="skip-link" href="#timeline">跳到留言</a>
+
+  <header class="hero">
+    <p class="eyebrow">Message Book</p>
+    <h1>留言</h1>
+    <div class="hero-rule" aria-hidden="true"><span></span></div>
+    <p class="lede" id="hero-lede" hidden><span id="total-count"></span> 条留言 · <span id="year-range"></span></p>
+    <nav class="year-nav" id="year-nav" aria-label="按年份跳转"></nav>
+    <div class="palette" role="group" aria-label="配色主题">
+      <span class="palette-label" aria-hidden="true">配色</span>
+      <button type="button" class="swatch" data-theme-btn="glass" title="白玻璃" aria-label="白玻璃" aria-pressed="false" style="--sw-bg:#f2f7ff; --sw-ink:linear-gradient(135deg, #8fc0ff, #d3a8ff)"></button>
+      <button type="button" class="swatch" data-theme-btn="glass-dark" title="黑玻璃" aria-label="黑玻璃" aria-pressed="false" style="--sw-bg:#11151c; --sw-ink:linear-gradient(135deg, #7fb4ff, #b58cff)"></button>
+      <span class="palette-current" id="palette-current" aria-hidden="true">白玻璃</span>
+    </div>
+  </header>
+
+  <div class="toolbar-wrap" id="toolbar-wrap">
+    <div class="toolbar">
+      <label class="search">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M13 13l4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <input id="search" type="search" placeholder="搜索名字、内容或日期" autocomplete="off" spellcheck="false" aria-label="搜索留言">
+      </label>
+      <label class="jump">
+        <select id="month-jump" aria-label="跳到某年某月"></select>
+      </label>
+      <button class="btn-random" id="random-btn" type="button" disabled>随机一条</button>
+    </div>
+  </div>
+
+  <section class="feed" aria-label="留言时间线">
+    <p class="timeline-status" id="search-status" role="status" aria-live="polite">正在翻信…</p>
+    <main id="timeline" class="timeline"></main>
+    <div class="empty" id="empty" hidden>
+      <p class="empty-title">没有找到相关留言</p>
+      <p class="empty-hint">换个关键词试试，或者清空搜索。</p>
+    </div>
+  </section>
+
+  <noscript><p class="noscript">需要启用 JavaScript 才能查看留言。</p></noscript>
+
+  <button type="button" class="to-top" id="to-top" aria-label="回到顶部">
+    <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M10 15V5M5.5 9.5L10 5l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <dialog class="random-dialog" id="random-dialog" aria-labelledby="random-kicker">
+    <div class="random-card">
+      <p class="random-kicker" id="random-kicker">随机回忆</p>
+      <div class="random-meta">
+        <span class="random-name" id="random-name"></span>
+        <time class="random-date" id="random-date"></time>
+      </div>
+      <p class="random-content" id="random-content"></p>
+      <div class="random-actions">
+        <button type="button" class="btn-random" id="random-again">再来一条</button>
+        <button type="button" class="btn-ghost" id="random-close">合上</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="note-dialog" id="note-dialog" aria-labelledby="note-dialog-name">
+    <div class="random-card note-dialog-card">
+      <div class="random-meta">
+        <span class="random-name" id="note-dialog-name"></span>
+        <time class="random-date" id="note-dialog-date"></time>
+      </div>
+      <p class="random-content note-dialog-content" id="note-dialog-content"></p>
+      <div class="random-actions">
+        <button type="button" class="btn-ghost" id="note-dialog-close">合上</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/ly.js"></script>
+</body>
+</html>
