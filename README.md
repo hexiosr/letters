@@ -3,5 +3,5 @@
 2019 – 2021 的静态留言本。
 
 - 入口：`index.html`
-- 数据：`message.json`
+- 数据：`data/message.json`
 - 预览：在根目录启动任意静态服务器

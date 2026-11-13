@@ -448,7 +448,7 @@
 
   async function load() {
     try {
-      const response = await fetch('message.json', { cache: 'no-cache' });
+      const response = await fetch('data/message.json', { cache: 'no-cache' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const raw = await response.json();
       if (!Array.isArray(raw)) throw new Error('留言数据格式不正确');
