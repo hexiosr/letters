@@ -5,19 +5,21 @@
   const statusEl = document.getElementById('search-status');
   const emptyEl = document.getElementById('empty');
   const searchEl = document.getElementById('search');
-  const monthJump = document.getElementById('month-jump');
+  const monthBtn = document.getElementById('month-jump');
+  const monthDialog = document.getElementById('month-dialog');
+  const monthGrid = document.getElementById('month-grid');
   const randomBtn = document.getElementById('random-btn');
   const dialog = document.getElementById('random-dialog');
   const dlgName = document.getElementById('random-name');
   const dlgDate = document.getElementById('random-date');
   const dlgContent = document.getElementById('random-content');
   const againBtn = document.getElementById('random-again');
-  const closeBtn = document.getElementById('random-close');
+  const randomNo = document.getElementById('random-no');
   const noteDialog = document.getElementById('note-dialog');
   const ndName = document.getElementById('note-dialog-name');
   const ndDate = document.getElementById('note-dialog-date');
   const ndContent = document.getElementById('note-dialog-content');
-  const ndClose = document.getElementById('note-dialog-close');
+  const noteNo = document.getElementById('note-dialog-no');
   const totalEl = document.getElementById('total-count');
   const rangeEl = document.getElementById('year-range');
   const heroLede = document.getElementById('hero-lede');
@@ -27,37 +29,9 @@
 
   const state = { items: [], filtered: [], query: '', lastRandom: null };
 
-  const THEMES = {
-    glass: { name: '白玻璃', color: '#e7edf7' },
-    'glass-dark': { name: '黑玻璃', color: '#0d1016' }
-  };
-  const themeMeta = document.querySelector('meta[name="theme-color"]');
-  const themeButtons = Array.from(document.querySelectorAll('[data-theme-btn]'));
-  const paletteCurrent = document.getElementById('palette-current');
-
-  function applyTheme(id) {
-    if (!THEMES[id]) id = 'glass';
-    document.documentElement.dataset.theme = id;
-    for (const button of themeButtons) {
-      button.setAttribute('aria-pressed', String(button.dataset.themeBtn === id));
-    }
-    if (themeMeta) themeMeta.content = THEMES[id].color;
-    if (paletteCurrent) paletteCurrent.textContent = THEMES[id].name;
-  }
-
-  for (const button of themeButtons) {
-    button.addEventListener('click', () => {
-      applyTheme(button.dataset.themeBtn);
-      try {
-        localStorage.setItem('message-theme', button.dataset.themeBtn);
-      } catch (error) {}
-    });
-  }
-
-  applyTheme(document.documentElement.dataset.theme || 'glass');
-
   const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pad2 = (n) => String(n).padStart(2, '0');
+  const CN_MONTHS = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
   const entityDecoder = document.createElement('textarea');
   function decodeEntities(text) {
@@ -102,6 +76,9 @@
       return { index, date, year, month, day, ts, name, content, plain };
     });
     items.sort((a, b) => (b.ts - a.ts) || (a.index - b.index));
+    for (let i = 0; i < items.length; i += 1) {
+      items[i].no = items.length - i;
+    }
     return items;
   }
 
@@ -109,6 +86,12 @@
     const match = /^(.*?)@([0-9a-f]{4,})$/i.exec(name);
     if (!match) return { main: name, handle: '' };
     return { main: match[1] || '匿名', handle: '@' + match[2] };
+  }
+
+  function fillName(target, name) {
+    const parts = splitName(name);
+    target.textContent = parts.main;
+    target.title = parts.handle ? name : '';
   }
 
   function highlight(text, query) {
@@ -147,12 +130,7 @@
     nameEl.className = 'note-name';
     const name = splitName(item.name);
     nameEl.append(highlight(name.main, state.query));
-    if (name.handle) {
-      const handle = document.createElement('span');
-      handle.className = 'note-handle';
-      handle.textContent = name.handle;
-      nameEl.append(handle);
-    }
+    if (name.handle) nameEl.title = item.name;
 
     const time = document.createElement('time');
     time.className = 'note-date';
@@ -174,7 +152,12 @@
       });
     }
 
-    note.append(head, content);
+    const no = document.createElement('span');
+    no.className = 'note-no';
+    no.textContent = String(item.no);
+    no.setAttribute('aria-label', `第 ${item.no} 条`);
+
+    note.append(head, content, no);
 
     note.addEventListener('click', () => {
       const selection = window.getSelection();
@@ -312,33 +295,60 @@
     }
   }
 
-  function buildMonthJump() {
-    monthJump.textContent = '';
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = '跳到年月…';
-    monthJump.append(placeholder);
-
-    let group = null;
-    let groupYear;
-    let lastKey;
-
+  function buildMonthMenu() {
+    monthGrid.textContent = '';
+    const counts = new Map();
     for (const item of state.items) {
       const key = monthKey(item);
-      if (key === lastKey) continue;
-      lastKey = key;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
 
-      if (item.year !== groupYear) {
-        groupYear = item.year;
-        group = document.createElement('optgroup');
-        group.label = item.year !== null ? `${item.year} 年` : '年份未知';
-        monthJump.append(group);
+    const years = [...new Set(state.items.map((item) => item.year))]
+      .filter((year) => year !== null)
+      .sort((a, b) => b - a);
+
+    for (const year of years) {
+      const block = document.createElement('section');
+      block.className = 'month-year';
+
+      const head = document.createElement('h3');
+      head.className = 'month-year-head';
+      head.textContent = String(year);
+
+      const months = document.createElement('div');
+      months.className = 'month-months';
+
+      for (let month = 1; month <= 12; month += 1) {
+        const key = `${year}-${month}`;
+        const count = counts.get(key) || 0;
+        const name = CN_MONTHS[month - 1];
+
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'month-chip';
+        chip.disabled = count === 0;
+        chip.setAttribute('aria-label', `${year} 年${name}${count ? `，${count} 条留言` : '，暂无留言'}`);
+
+        const label = document.createElement('span');
+        label.className = 'chip-month';
+        label.textContent = name;
+
+        const badge = document.createElement('span');
+        badge.className = 'chip-count';
+        badge.textContent = count ? String(count) : '—';
+
+        chip.append(label, badge);
+        if (count) {
+          chip.addEventListener('click', () => {
+            monthDialog.close();
+            jumpToMonth(key);
+          });
+        }
+        months.append(chip);
       }
 
-      const option = document.createElement('option');
-      option.value = key;
-      option.textContent = item.month ? `${pad2(item.month)} 月` : '日期未知';
-      group.append(option);
+      block.append(head, months);
+      monthGrid.append(block);
     }
   }
 
@@ -369,10 +379,12 @@
   }
 
   function openNote(item) {
-    ndName.textContent = item.name;
+    fillName(ndName, item.name);
+    noteNo.textContent = String(item.no);
+    noteNo.setAttribute('aria-label', `第 ${item.no} 条`);
     if (item.date) {
       ndDate.dateTime = item.date;
-      ndDate.textContent = item.date;
+      ndDate.textContent = `${item.year} 年 ${item.month} 月 ${item.day} 日`;
     } else {
       ndDate.removeAttribute('datetime');
       ndDate.textContent = '日期未知';
@@ -385,10 +397,12 @@
     const item = pickRandom();
     if (!item) return;
 
-    dlgName.textContent = item.name;
+    fillName(dlgName, item.name);
+    randomNo.textContent = String(item.no);
+    randomNo.setAttribute('aria-label', `第 ${item.no} 条`);
     if (item.date) {
       dlgDate.dateTime = item.date;
-      dlgDate.textContent = item.date;
+      dlgDate.textContent = `${item.year} 年 ${item.month} 月 ${item.day} 日`;
     } else {
       dlgDate.removeAttribute('datetime');
       dlgDate.textContent = '日期未知';
@@ -414,19 +428,19 @@
     }
   });
 
-  monthJump.addEventListener('change', () => {
-    jumpToMonth(monthJump.value);
-    monthJump.value = '';
+  monthBtn.addEventListener('click', () => {
+    if (!monthDialog.open) monthDialog.showModal();
+  });
+  monthDialog.addEventListener('click', (event) => {
+    if (event.target === monthDialog) monthDialog.close();
   });
 
   randomBtn.addEventListener('click', showRandom);
   againBtn.addEventListener('click', showRandom);
-  closeBtn.addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) dialog.close();
   });
 
-  ndClose.addEventListener('click', () => noteDialog.close());
   noteDialog.addEventListener('click', (event) => {
     if (event.target === noteDialog) noteDialog.close();
   });
@@ -465,7 +479,7 @@
       randomBtn.disabled = state.items.length === 0;
 
       buildYearNav();
-      buildMonthJump();
+      buildMonthMenu();
       applyFilter('');
       syncToolbarHeight();
     } catch (error) {
