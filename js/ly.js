@@ -415,8 +415,11 @@
     return item;
   }
 
+  const dialogOrigin = new WeakMap();
   function openModal(el, originEl) {
     if (el.open) return;
+    if (originEl) dialogOrigin.set(el, originEl);
+    else dialogOrigin.delete(el);
     el.classList.remove('is-closing');
     el.showModal();
     el.focus({ preventScroll: true });
@@ -472,7 +475,7 @@
     }
 
     const card = el.querySelector('.random-card');
-    const originEl = el === noteDialog ? noteOrigin : null;
+    const originEl = dialogOrigin.get(el) || null;
 
     if (card && originEl && originEl.isConnected) {
       card.getAnimations().forEach((anim) => anim.cancel());
@@ -513,9 +516,7 @@
     }, DIALOG_CLOSE_MS);
   }
 
-  let noteOrigin = null;
   function openNote(item, originEl) {
-    noteOrigin = originEl || null;
     fillName(ndName, item.name);
     noteNo.textContent = String(item.no);
     noteNo.setAttribute('aria-label', `第 ${item.no} 条`);
@@ -552,7 +553,7 @@
 
     if (!dialog.open) {
       renderRandom(item);
-      openModal(dialog);
+      openModal(dialog, randomBtn);
       return;
     }
     if (swapping || reduceMotion) {
@@ -597,7 +598,7 @@
     searchEl.focus({ preventScroll: true });
   });
 
-  monthBtn.addEventListener('click', () => openModal(monthDialog));
+  monthBtn.addEventListener('click', () => openModal(monthDialog, monthBtn));
   monthDialog.addEventListener('click', (event) => {
     if (event.target === monthDialog) closeModal(monthDialog);
   });
