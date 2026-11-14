@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="css/ly.css">
 </head>
 <body>
+  <div class="bg" aria-hidden="true">
+    <span class="bg-blob bg-blob-1"></span>
+    <span class="bg-blob bg-blob-2"></span>
+    <span class="bg-blob bg-blob-3"></span>
+  </div>
   <a class="skip-link" href="#timeline">跳到留言</a>
 
   <header class="hero">
@@ -51,7 +56,7 @@
     </svg>
   </button>
 
-  <dialog class="random-dialog" id="random-dialog" aria-labelledby="random-kicker">
+  <dialog class="random-dialog" id="random-dialog" aria-labelledby="random-kicker" tabindex="-1">
     <div class="random-card">
       <p class="random-kicker" id="random-kicker">随机回忆</p>
       <div class="random-meta">
@@ -66,14 +71,14 @@
     </div>
   </dialog>
 
-  <dialog class="month-dialog" id="month-dialog" aria-labelledby="month-dialog-title">
+  <dialog class="month-dialog" id="month-dialog" aria-labelledby="month-dialog-title" tabindex="-1">
     <div class="random-card month-dialog-card">
       <p class="random-kicker" id="month-dialog-title">跳到月份</p>
       <div class="month-grid" id="month-grid"></div>
     </div>
   </dialog>
 
-  <dialog class="note-dialog" id="note-dialog" aria-labelledby="note-dialog-name">
+  <dialog class="note-dialog" id="note-dialog" aria-labelledby="note-dialog-name" tabindex="-1">
     <div class="random-card note-dialog-card">
       <div class="random-meta">
         <span class="random-name" id="note-dialog-name"></span>

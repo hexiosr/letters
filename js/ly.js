@@ -29,6 +29,10 @@
 
   const state = { items: [], filtered: [], query: '', lastRandom: null };
 
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DIALOG_CLOSE_MS = 160;
+  const ZOOM_CLOSE_MS = 360;
+
   const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pad2 = (n) => String(n).padStart(2, '0');
   const CN_MONTHS = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
@@ -162,12 +166,12 @@
     note.addEventListener('click', () => {
       const selection = window.getSelection();
       if (selection && !selection.isCollapsed) return;
-      openNote(item);
+      openNote(item, note);
     });
     note.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        openNote(item);
+        openNote(item, note);
       }
     });
 
@@ -181,6 +185,7 @@
   function render() {
     const all = state.filtered;
     timeline.textContent = '';
+    const frag = document.createDocumentFragment();
 
     const yearCounts = new Map();
     const monthCounts = new Map();
@@ -221,7 +226,7 @@
 
         label.append(num, rule, count);
         yearSection.append(label);
-        timeline.append(yearSection);
+        frag.append(yearSection);
       }
 
       const key = monthKey(item);
@@ -260,6 +265,7 @@
       monthBody.append(createNote(item));
     }
 
+    timeline.append(frag);
     emptyEl.hidden = all.length !== 0;
     updateStatus(all.length);
   }
@@ -340,7 +346,7 @@
         chip.append(label, badge);
         if (count) {
           chip.addEventListener('click', () => {
-            monthDialog.close();
+            closeModal(monthDialog);
             jumpToMonth(key);
           });
         }
@@ -363,7 +369,15 @@
     }
 
     const target = document.getElementById(`month-${key}`);
-    if (target) target.scrollIntoView();
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    if (reduceMotion) return;
+
+    target.classList.remove('is-hit');
+    void target.offsetWidth;
+    target.classList.add('is-hit');
+    target.addEventListener('animationend', () => target.classList.remove('is-hit'), { once: true });
   }
 
   function pickRandom() {
@@ -378,7 +392,104 @@
     return item;
   }
 
-  function openNote(item) {
+  function openModal(el, originEl) {
+    if (el.open) return;
+    el.classList.remove('is-closing');
+    el.showModal();
+    el.focus({ preventScroll: true });
+    zoomIn(el, originEl);
+  }
+
+  function zoomIn(el, originEl) {
+    if (reduceMotion) return;
+    const card = el.querySelector('.random-card');
+    if (!card) return;
+
+    const to = card.getBoundingClientRect();
+    if (!to.width || !to.height) return;
+
+    let frames = null;
+    if (originEl) {
+      const from = originEl.getBoundingClientRect();
+      if (from.width && from.height) {
+        frames = [
+          {
+            transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`,
+            opacity: 0
+          },
+          { opacity: 1, offset: .3 },
+          { transform: 'none', opacity: 1 }
+        ];
+        card.style.transformOrigin = '0 0';
+      }
+    }
+    if (!frames) {
+      frames = [
+        { transform: 'scale(.9)', opacity: 0 },
+        { opacity: 1, offset: .35 },
+        { transform: 'none', opacity: 1 }
+      ];
+      card.style.transformOrigin = '50% 50%';
+    }
+
+    card.animate(frames, {
+      duration: originEl ? 420 : 340,
+      easing: 'cubic-bezier(.22, 1, .36, 1)'
+    }).finished.catch(() => {}).then(() => {
+      if (!el.open || !el.classList.contains('is-closing')) card.style.transformOrigin = '';
+    });
+  }
+
+  function closeModal(el) {
+    if (!el.open || el.classList.contains('is-closing')) return;
+    if (reduceMotion) {
+      el.close();
+      return;
+    }
+
+    const card = el.querySelector('.random-card');
+    const originEl = el === noteDialog ? noteOrigin : null;
+
+    if (card && originEl && originEl.isConnected) {
+      card.getAnimations().forEach((anim) => anim.cancel());
+      const to = card.getBoundingClientRect();
+      const from = originEl.getBoundingClientRect();
+      if (to.width && to.height && from.width && from.height) {
+        el.classList.add('is-closing', 'is-zooming-back');
+        card.style.transformOrigin = '0 0';
+        card.animate([
+          { transform: 'none', opacity: 1 },
+          { opacity: 1, offset: .55 },
+          {
+            transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`,
+            opacity: 0
+          }
+        ], {
+          duration: ZOOM_CLOSE_MS,
+          easing: 'cubic-bezier(.5, 0, .2, 1)'
+        }).finished.catch(() => {}).then(() => {
+          card.style.transformOrigin = '';
+          el.classList.remove('is-closing', 'is-zooming-back');
+          if (el.open) el.close();
+        });
+        return;
+      }
+    }
+
+    if (card) {
+      card.getAnimations().forEach((anim) => anim.cancel());
+      card.style.transformOrigin = '';
+    }
+    el.classList.add('is-closing');
+    setTimeout(() => {
+      el.classList.remove('is-closing');
+      el.close();
+    }, DIALOG_CLOSE_MS);
+  }
+
+  let noteOrigin = null;
+  function openNote(item, originEl) {
+    noteOrigin = originEl || null;
     fillName(ndName, item.name);
     noteNo.textContent = String(item.no);
     noteNo.setAttribute('aria-label', `第 ${item.no} 条`);
@@ -390,13 +501,10 @@
       ndDate.textContent = '日期未知';
     }
     fillContent(ndContent, item.content);
-    if (!noteDialog.open) noteDialog.showModal();
+    openModal(noteDialog, originEl);
   }
 
-  function showRandom() {
-    const item = pickRandom();
-    if (!item) return;
-
+  function renderRandom(item) {
     fillName(dlgName, item.name);
     randomNo.textContent = String(item.no);
     randomNo.setAttribute('aria-label', `第 ${item.no} 条`);
@@ -409,7 +517,31 @@
     }
 
     fillContent(dlgContent, item.content);
-    if (!dialog.open) dialog.showModal();
+  }
+
+  let swapping = false;
+  function showRandom() {
+    const item = pickRandom();
+    if (!item) return;
+
+    if (!dialog.open) {
+      renderRandom(item);
+      openModal(dialog);
+      return;
+    }
+    if (swapping || reduceMotion) {
+      if (!swapping) renderRandom(item);
+      return;
+    }
+
+    swapping = true;
+    const card = dialog.querySelector('.random-card');
+    card.classList.add('is-swapping');
+    setTimeout(() => {
+      renderRandom(item);
+      card.classList.remove('is-swapping');
+      swapping = false;
+    }, 140);
   }
 
   function syncToolbarHeight() {
@@ -428,22 +560,28 @@
     }
   });
 
-  monthBtn.addEventListener('click', () => {
-    if (!monthDialog.open) monthDialog.showModal();
-  });
+  monthBtn.addEventListener('click', () => openModal(monthDialog));
   monthDialog.addEventListener('click', (event) => {
-    if (event.target === monthDialog) monthDialog.close();
+    if (event.target === monthDialog) closeModal(monthDialog);
   });
 
   randomBtn.addEventListener('click', showRandom);
   againBtn.addEventListener('click', showRandom);
   dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) dialog.close();
+    if (event.target === dialog) closeModal(dialog);
   });
 
   noteDialog.addEventListener('click', (event) => {
-    if (event.target === noteDialog) noteDialog.close();
+    if (event.target === noteDialog) closeModal(noteDialog);
   });
+
+  for (const dlg of [monthDialog, dialog, noteDialog]) {
+    dlg.addEventListener('cancel', (event) => {
+      if (reduceMotion) return;
+      event.preventDefault();
+      closeModal(dlg);
+    });
+  }
 
   window.addEventListener('resize', syncToolbarHeight);
   if ('ResizeObserver' in window) {
