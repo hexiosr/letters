@@ -5,6 +5,7 @@
   const statusEl = document.getElementById('search-status');
   const emptyEl = document.getElementById('empty');
   const searchEl = document.getElementById('search');
+  const searchClear = document.getElementById('search-clear');
   const monthBtn = document.getElementById('month-jump');
   const monthDialog = document.getElementById('month-dialog');
   const monthGrid = document.getElementById('month-grid');
@@ -363,6 +364,7 @@
 
     if (state.query) {
       searchEl.value = '';
+      syncSearchClear();
       state.query = '';
       state.filtered = state.items.slice();
       render();
@@ -549,7 +551,11 @@
   }
 
   let searchTimer;
+  function syncSearchClear() {
+    searchClear.hidden = searchEl.value.length === 0;
+  }
   searchEl.addEventListener('input', () => {
+    syncSearchClear();
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => applyFilter(searchEl.value), 120);
   });
@@ -558,6 +564,13 @@
       clearTimeout(searchTimer);
       applyFilter(searchEl.value);
     }
+  });
+  searchClear.addEventListener('click', () => {
+    clearTimeout(searchTimer);
+    searchEl.value = '';
+    syncSearchClear();
+    applyFilter('');
+    searchEl.focus({ preventScroll: true });
   });
 
   monthBtn.addEventListener('click', () => openModal(monthDialog));

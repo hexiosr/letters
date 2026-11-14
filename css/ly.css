@@ -257,21 +257,21 @@ body::before {
   align-items: center;
   gap: .6rem;
   padding: .5rem .95rem;
-  background: var(--field-bg);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 1px solid var(--accent-border);
   border-radius: 999px;
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .search:focus-within {
-  background: var(--card);
-  border-color: var(--accent-border);
+  background: var(--accent-faint);
+  border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
-.search svg {
+.search > svg {
   flex: none;
   width: 16px;
   height: 16px;
-  color: var(--ink-faint);
+  color: var(--accent);
 }
 .search input {
   flex: 1;
@@ -284,20 +284,47 @@ body::before {
   color: var(--ink);
   outline: none;
 }
-.search input::placeholder { color: var(--ink-faint); }
+.search input::placeholder { color: var(--accent); opacity: .68; }
+.search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-right: -.3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  cursor: pointer;
+}
+.search-clear[hidden] { display: none; }
+.search-clear svg { width: .68rem; height: .68rem; }
+@media (hover: hover) {
+  .search-clear:hover { background: var(--accent); color: var(--on-accent); }
+}
+.search-clear:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
 
 .btn-jump {
   position: relative;
   appearance: none;
   flex: none;
   padding: .5rem 2.1rem .5rem 1rem;
-  background: var(--field-bg);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 1px solid var(--accent-border);
   border-radius: 999px;
   font-family: var(--serif);
   font-size: .9rem;
   letter-spacing: .08em;
-  color: var(--ink-soft);
+  color: var(--accent);
   white-space: nowrap;
   cursor: pointer;
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
@@ -309,17 +336,20 @@ body::before {
   top: 50%;
   width: .42rem;
   height: .42rem;
-  border-right: 1px solid var(--ink-soft);
-  border-bottom: 1px solid var(--ink-soft);
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
   transform: translateY(-70%) rotate(45deg);
   pointer-events: none;
 }
-.btn-jump:hover {
-  background: var(--card);
-  border-color: var(--line-strong);
+@media (hover: hover) {
+  .btn-jump:hover,
+  .btn-jump:focus-visible {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
 }
 .btn-jump:focus-visible {
-  border-color: var(--accent-border);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
@@ -919,17 +949,6 @@ dialog.is-zooming-back::backdrop {
   box-shadow: 0 1px 0 var(--glass-hi) inset, 0 18px 30px -30px rgba(40, 16, 80, .5);
   -webkit-backdrop-filter: blur(26px) saturate(2) brightness(1.03);
   backdrop-filter: blur(26px) saturate(2) brightness(1.03);
-}
-
-.search,
-.btn-jump {
-  background: var(--glass-field);
-  border-color: var(--glass-edge);
-}
-.search:focus-within,
-.btn-jump:hover,
-.btn-jump:focus-visible {
-  background: var(--glass-bar);
 }
 
 .note {
