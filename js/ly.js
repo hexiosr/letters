@@ -32,7 +32,7 @@
   const state = { items: [], filtered: [], query: '', lastRandom: null };
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const DIALOG_CLOSE_MS = 160;
+  const DIALOG_CLOSE_MS = 240;
   const ZOOM_CLOSE_MS = 360;
 
   const escapeRegExp = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

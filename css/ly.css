@@ -795,10 +795,10 @@ dialog[open]::backdrop {
   animation: dialog-backdrop-in .26s ease both;
 }
 dialog.is-closing .random-card {
-  animation: dialog-card-out .16s ease-in both;
+  animation: dialog-card-out .24s cubic-bezier(.4, 0, .2, 1) both;
 }
 dialog.is-closing::backdrop {
-  animation: dialog-backdrop-out .16s ease both;
+  animation: dialog-backdrop-out .24s ease both;
 }
 dialog.is-closing.is-zooming-back .random-card {
   animation: none;
@@ -904,7 +904,7 @@ dialog.is-zooming-back::backdrop {
 
 @keyframes dialog-card-out {
   from { opacity: 1; transform: none; }
-  to { opacity: 0; transform: translateY(6px) scale(.97); }
+  to { opacity: 0; transform: translateY(10px) scale(.94); }
 }
 @keyframes dialog-backdrop-in {
   from { opacity: 0; }
