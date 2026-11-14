@@ -28,6 +28,7 @@
   const toolbarWrap = document.getElementById('toolbar-wrap');
   const toTopBtn = document.getElementById('to-top');
   const jumpVeil = document.getElementById('jump-veil');
+  const themeToggle = document.getElementById('theme-toggle');
 
   const state = { items: [], filtered: [], query: '', lastRandom: null };
 
@@ -625,6 +626,38 @@
   if ('ResizeObserver' in window) {
     new ResizeObserver(syncToolbarHeight).observe(toolbarWrap);
   }
+
+  const THEME_KEY = 'letters-theme';
+  const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+  const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function applyTheme(theme) {
+    const dark = theme === 'dark';
+    document.documentElement.dataset.theme = theme;
+    themeToggle.setAttribute('aria-label', dark ? '切换到浅色' : '切换到深色');
+    themeMetas.forEach((meta) => {
+      meta.content = dark ? '#14101d' : '#f3e9ff';
+    });
+  }
+
+  function readSavedTheme() {
+    try { return localStorage.getItem(THEME_KEY); } catch (err) { return null; }
+  }
+
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+
+  themeToggle.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try {
+      if (next === (systemDark.matches ? 'dark' : 'light')) localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, next);
+    } catch (err) {}
+  });
+
+  systemDark.addEventListener('change', (event) => {
+    if (!readSavedTheme()) applyTheme(event.matches ? 'dark' : 'light');
+  });
 
   function syncToTop() {
     toTopBtn.classList.toggle('is-visible', window.scrollY > 600);
