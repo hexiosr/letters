@@ -347,8 +347,7 @@
         chip.append(label, badge);
         if (count) {
           chip.addEventListener('click', () => {
-            closeModal(monthDialog);
-            jumpToMonth(key);
+            closeModal(monthDialog, () => jumpToMonth(key));
           });
         }
         months.append(chip);
@@ -373,8 +372,9 @@
     const target = document.getElementById(`month-${key}`);
     if (!target) return;
 
-    const barTop = target.getBoundingClientRect().top + window.scrollY;
-    const top = Math.max(0, barTop - toolbarWrap.offsetHeight - 2.4);
+    const group = target.closest('.month-group') || target;
+    const groupTop = group.getBoundingClientRect().top + window.scrollY;
+    const top = Math.max(0, groupTop - toolbarWrap.offsetHeight - 10);
 
     if (reduceMotion) {
       const root = document.documentElement;
@@ -451,10 +451,11 @@
     });
   }
 
-  function closeModal(el) {
+  function closeModal(el, afterClose) {
     if (!el.open || el.classList.contains('is-closing')) return;
     if (reduceMotion) {
       el.close();
+      if (afterClose) afterClose();
       return;
     }
 
@@ -482,6 +483,7 @@
           card.style.transformOrigin = '';
           el.classList.remove('is-closing', 'is-zooming-back');
           if (el.open) el.close();
+          if (afterClose) afterClose();
         });
         return;
       }
@@ -495,6 +497,7 @@
     setTimeout(() => {
       el.classList.remove('is-closing');
       el.close();
+      if (afterClose) afterClose();
     }, DIALOG_CLOSE_MS);
   }
 
