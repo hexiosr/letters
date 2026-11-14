@@ -416,10 +416,6 @@
     return item;
   }
 
-  function syncScrollLock() {
-    document.documentElement.classList.toggle('is-modal-open', !!document.querySelector('dialog[open]'));
-  }
-
   const dialogOrigin = new WeakMap();
   function openModal(el, originEl) {
     if (el.open) return;
@@ -428,7 +424,6 @@
     el.classList.remove('is-closing');
     el.showModal();
     el.focus({ preventScroll: true });
-    document.documentElement.classList.add('is-modal-open');
     zoomIn(el, originEl);
   }
 
@@ -641,8 +636,30 @@
 
   for (const el of [monthDialog, dialog, noteDialog]) bindBackdropDismiss(el);
 
+  function blockBackgroundScroll(event) {
+    if (!document.querySelector('dialog[open]')) return;
+    if (event.target.closest && event.target.closest('.random-content, .month-grid')) return;
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) return;
+    event.preventDefault();
+  }
+  document.addEventListener('touchmove', blockBackgroundScroll, { passive: false });
+  document.addEventListener('wheel', blockBackgroundScroll, { passive: false });
+
+  for (const nameEl of [dlgName, ndName]) {
+    nameEl.addEventListener('contextmenu', (event) => event.preventDefault());
+  }
+
+  for (const el of [monthDialog, dialog, noteDialog]) {
+    el.addEventListener('copy', () => {
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && !selection.isCollapsed) selection.removeAllRanges();
+      }, 0);
+    });
+  }
+
   for (const dlg of [monthDialog, dialog, noteDialog]) {
-    dlg.addEventListener('close', syncScrollLock);
     dlg.addEventListener('cancel', (event) => {
       if (reduceMotion) return;
       event.preventDefault();
