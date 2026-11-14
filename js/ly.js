@@ -325,7 +325,7 @@
       const months = document.createElement('div');
       months.className = 'month-months';
 
-      for (let month = 1; month <= 12; month += 1) {
+      for (let month = 12; month >= 1; month -= 1) {
         const key = `${year}-${month}`;
         const count = counts.get(key) || 0;
         const name = CN_MONTHS[month - 1];
