@@ -416,6 +416,10 @@
     return item;
   }
 
+  function syncScrollLock() {
+    document.documentElement.classList.toggle('is-modal-open', !!document.querySelector('dialog[open]'));
+  }
+
   const dialogOrigin = new WeakMap();
   function openModal(el, originEl) {
     if (el.open) return;
@@ -424,6 +428,7 @@
     el.classList.remove('is-closing');
     el.showModal();
     el.focus({ preventScroll: true });
+    document.documentElement.classList.add('is-modal-open');
     zoomIn(el, originEl);
   }
 
@@ -469,6 +474,8 @@
 
   function closeModal(el, afterClose) {
     if (!el.open || el.classList.contains('is-closing')) return;
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) selection.removeAllRanges();
     if (reduceMotion) {
       el.close();
       if (afterClose) afterClose();
@@ -599,22 +606,43 @@
     searchEl.focus({ preventScroll: true });
   });
 
-  monthBtn.addEventListener('click', () => openModal(monthDialog, monthBtn));
-  monthDialog.addEventListener('click', (event) => {
-    if (event.target === monthDialog) closeModal(monthDialog);
-  });
+  function dismissBackdrop(el) {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed) selection.removeAllRanges();
+    closeModal(el);
+  }
 
+  function bindBackdropDismiss(el) {
+    let startX = 0;
+    let startY = 0;
+    let pressed = false;
+    el.addEventListener('pointerdown', (event) => {
+      pressed = event.target === el;
+      if (pressed) {
+        startX = event.clientX;
+        startY = event.clientY;
+      }
+    });
+    el.addEventListener('pointerup', (event) => {
+      const wasPressed = pressed;
+      pressed = false;
+      if (!wasPressed || event.target !== el) return;
+      if (Math.hypot(event.clientX - startX, event.clientY - startY) > 10) return;
+      dismissBackdrop(el);
+    });
+    el.addEventListener('click', (event) => {
+      if (event.target === el) dismissBackdrop(el);
+    });
+  }
+
+  monthBtn.addEventListener('click', () => openModal(monthDialog, monthBtn));
   randomBtn.addEventListener('click', showRandom);
   againBtn.addEventListener('click', showRandom);
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) closeModal(dialog);
-  });
 
-  noteDialog.addEventListener('click', (event) => {
-    if (event.target === noteDialog) closeModal(noteDialog);
-  });
+  for (const el of [monthDialog, dialog, noteDialog]) bindBackdropDismiss(el);
 
   for (const dlg of [monthDialog, dialog, noteDialog]) {
+    dlg.addEventListener('close', syncScrollLock);
     dlg.addEventListener('cancel', (event) => {
       if (reduceMotion) return;
       event.preventDefault();
