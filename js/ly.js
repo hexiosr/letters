@@ -430,7 +430,7 @@
   function zoomIn(el, originEl) {
     if (reduceMotion) return;
     const card = el.querySelector('.random-card');
-    if (!card || typeof card.animate !== 'function') return;
+    if (!card) return;
 
     const to = card.getBoundingClientRect();
     if (!to.width || !to.height) return;
@@ -482,20 +482,9 @@
       card.getAnimations().forEach((anim) => anim.cancel());
       const to = card.getBoundingClientRect();
       const from = originEl.getBoundingClientRect();
-      if (to.width && to.height && from.width && from.height && typeof card.animate === 'function') {
-        let closed = false;
-        const finish = () => {
-          if (closed) return;
-          closed = true;
-          clearTimeout(watchdog);
-          card.style.transformOrigin = '';
-          el.classList.remove('is-closing', 'is-zooming-back');
-          if (el.open) el.close();
-          if (afterClose) afterClose();
-        };
+      if (to.width && to.height && from.width && from.height) {
         el.classList.add('is-closing', 'is-zooming-back');
         card.style.transformOrigin = '0 0';
-        const watchdog = setTimeout(finish, ZOOM_CLOSE_MS + 300);
         card.animate([
           { transform: 'none', opacity: 1 },
           { opacity: 1, offset: .55 },
@@ -506,7 +495,12 @@
         ], {
           duration: ZOOM_CLOSE_MS,
           easing: 'cubic-bezier(.5, 0, .2, 1)'
-        }).finished.catch(() => {}).then(finish);
+        }).finished.catch(() => {}).then(() => {
+          card.style.transformOrigin = '';
+          el.classList.remove('is-closing', 'is-zooming-back');
+          if (el.open) el.close();
+          if (afterClose) afterClose();
+        });
         return;
       }
     }
