@@ -601,7 +601,7 @@ mark {
 
 .random-card {
   position: relative;
-  padding: 2rem 2rem 2.2rem;
+  padding: 2rem 2rem 1.5rem;
   background: linear-gradient(180deg, var(--card-top), var(--card-deep));
   border: 1px solid var(--line-strong);
   border-radius: 10px;
@@ -645,6 +645,10 @@ mark {
   color: var(--ink-faint);
   border: 1px solid var(--line);
   border-radius: 4px;
+}
+#random-dialog .dialog-no {
+  position: static;
+  order: 1;
 }
 .random-name {
   font-size: .95rem;
@@ -922,7 +926,7 @@ mark {
   .year-num { font-size: 1.55rem; }
   .month-bar { padding: .4rem .6rem; }
   .month-label { font-size: .86rem; }
-  .random-card { padding: 1.6rem 1.4rem 2rem; }
+  .random-card { padding: 1.6rem 1.4rem 1.2rem; }
   .random-content { font-size: 1rem; }
   .note-dialog-content { font-size: 1.02rem; }
   .random-actions > button { flex: 1 1 auto; }
