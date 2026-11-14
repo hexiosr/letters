@@ -373,8 +373,17 @@
     const target = document.getElementById(`month-${key}`);
     if (!target) return;
 
-    target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-    if (reduceMotion) return;
+    const barTop = target.getBoundingClientRect().top + window.scrollY;
+    const top = Math.max(0, barTop - toolbarWrap.offsetHeight - 2.4);
+
+    if (reduceMotion) {
+      const root = document.documentElement;
+      root.style.scrollBehavior = 'auto';
+      window.scrollTo({ top });
+      root.style.scrollBehavior = '';
+      return;
+    }
+    window.scrollTo({ top, behavior: 'smooth' });
 
     target.classList.remove('is-hit');
     void target.offsetWidth;
