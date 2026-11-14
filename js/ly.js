@@ -27,6 +27,7 @@
   const yearNav = document.getElementById('year-nav');
   const toolbarWrap = document.getElementById('toolbar-wrap');
   const toTopBtn = document.getElementById('to-top');
+  const jumpVeil = document.getElementById('jump-veil');
 
   const state = { items: [], filtered: [], query: '', lastRandom: null };
 
@@ -373,22 +374,33 @@
     if (!target) return;
 
     const group = target.closest('.month-group') || target;
-    const groupTop = group.getBoundingClientRect().top + window.scrollY;
-    const top = Math.max(0, groupTop - toolbarWrap.offsetHeight - 10);
 
-    if (reduceMotion) {
+    const scrollToTarget = () => {
+      const top = Math.max(
+        0,
+        group.getBoundingClientRect().top + window.scrollY - toolbarWrap.offsetHeight - 10
+      );
       const root = document.documentElement;
+      const prevBehavior = root.style.scrollBehavior;
       root.style.scrollBehavior = 'auto';
       window.scrollTo({ top });
-      root.style.scrollBehavior = '';
+      root.style.scrollBehavior = prevBehavior;
+    };
+
+    if (reduceMotion) {
+      scrollToTarget();
       return;
     }
-    window.scrollTo({ top, behavior: 'smooth' });
 
-    target.classList.remove('is-hit');
-    void target.offsetWidth;
-    target.classList.add('is-hit');
-    target.addEventListener('animationend', () => target.classList.remove('is-hit'), { once: true });
+    jumpVeil.classList.add('is-on');
+    setTimeout(() => {
+      scrollToTarget();
+      jumpVeil.classList.remove('is-on');
+      target.classList.remove('is-hit');
+      void target.offsetWidth;
+      target.classList.add('is-hit');
+      target.addEventListener('animationend', () => target.classList.remove('is-hit'), { once: true });
+    }, 190);
   }
 
   function pickRandom() {

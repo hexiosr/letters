@@ -79,6 +79,22 @@ body {
     radial-gradient(70vmax 55vmax at 50% -14%, rgba(255, 255, 255, .62), transparent 62%),
     radial-gradient(120vmax 100vmax at 50% 50%, transparent 58%, rgba(52, 22, 88, .16) 100%);
 }
+.jump-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background:
+    radial-gradient(60vmax 50vmax at 50% 16%, rgba(126, 96, 255, .1), transparent 70%),
+    radial-gradient(60vmax 50vmax at 72% 92%, rgba(255, 110, 184, .1), transparent 70%),
+    var(--paper);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .36s cubic-bezier(.33, 0, .2, 1);
+}
+.jump-veil.is-on {
+  opacity: 1;
+  transition-duration: .18s;
+}
 .bg-blob {
   position: absolute;
   inset: -30%;
