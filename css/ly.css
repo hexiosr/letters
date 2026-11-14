@@ -674,6 +674,29 @@ mark {
   color: var(--accent);
 }
 
+.credit {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 1rem 1.5rem 3.2rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: .72rem;
+  letter-spacing: .12em;
+  color: var(--ink-faint);
+}
+.credit a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: .1em;
+  transition: color .18s ease, border-color .18s ease;
+}
+.credit a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent-border);
+}
+
 /* ---------- 随机回忆弹窗 ---------- */
 
 .random-dialog {
@@ -1070,6 +1093,7 @@ dialog:focus {
   .btn-jump { flex: 1 1 0; }
   .btn-random { flex: 1 1 0; }
   .feed { padding: 1.4rem 1rem 4rem; }
+  .credit { padding: 1rem 1rem 2.6rem; }
   .note {
     padding: 1rem 1.05rem 1.7rem 1.35rem;
   }
